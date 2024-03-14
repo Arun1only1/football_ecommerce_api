@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 
-const dbName = "badminton-ecommerce";
-const dbUserName = "arun";
-const dbPassword = "arun2nly2";
+const dbName = process.env.DB_NAME;
+const dbUserName = process.env.DB_USER_NAME;
+const dbPassword = process.env.DB_PASSWORD;
 
 const connectDB = async () => {
   try {

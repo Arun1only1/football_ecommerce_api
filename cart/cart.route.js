@@ -1,6 +1,9 @@
 import express from "express";
 import { isBuyer } from "../middleware/authentication.middleware.js";
-import { addItemToCartValidationSchema } from "./cart.validation.js";
+import {
+  addItemToCartValidationSchema,
+  updateQuantityValidationSchema,
+} from "./cart.validation.js";
 import mongoose from "mongoose";
 import Product from "../product/product.model.js";
 import Cart from "./cart.model.js";
@@ -125,21 +128,37 @@ router.get("/cart/item/list", isBuyer, async (req, res) => {
       $project: {
         name: { $first: "$productDetails.name" },
         brand: { $first: "$productDetails.brand" },
-        category: { $first: "$productDetails.category" },
         price: { $first: "$productDetails.price" },
-        availableQuantity: { $first: "$productDetails.quantity" },
         image: { $first: "$productDetails.image" },
         productId: 1,
         orderedQuantity: 1,
-        subTotal: "",
+        subTotal: {
+          $multiply: [{ $first: "$productDetails.price" }, "$orderedQuantity"],
+        },
       },
     },
   ]);
 
-  return res.status(200).send({ message: "success", cartItems: cartItemList });
-});
+  let subTotalOfAllProducts = 0;
 
-// TODO:update cart quantity
+  cartItemList.forEach((item) => {
+    subTotalOfAllProducts = subTotalOfAllProducts + item.subTotal;
+  });
+
+  const discount = 0.05 * subTotalOfAllProducts;
+
+  const grandTotal = subTotalOfAllProducts - discount;
+
+  return res.status(200).send({
+    message: "success",
+    cartItems: cartItemList,
+    orderSummary: [
+      { name: "sub total", value: subTotalOfAllProducts.toFixed(2) },
+      { name: "discount", value: discount.toFixed(2) },
+      { name: "grandTotal", value: grandTotal.toFixed(2) },
+    ],
+  });
+});
 
 router.get("/cart/item/count", isBuyer, async (req, res) => {
   const cartItemCount = await Cart.find({
@@ -148,4 +167,69 @@ router.get("/cart/item/count", isBuyer, async (req, res) => {
 
   return res.status(200).send({ message: "success", itemCount: cartItemCount });
 });
+
+router.put(
+  "/cart/update/quantity/:id",
+  isBuyer,
+  checkMongoIdValidityFromParams,
+
+  async (req, res, next) => {
+    // extract values from req.body
+    const values = req.body;
+    // validate cart item
+    try {
+      const validatedData = await updateQuantityValidationSchema.validate(
+        values
+      );
+      req.body = validatedData;
+      next();
+    } catch (error) {
+      return res.status(400).send({ message: error.message });
+    }
+  },
+  async (req, res) => {
+    // extract product id from req.params
+    const productId = req.params.id;
+
+    // check if cart exists using product Id and buyerId
+    const cart = await Cart.findOne({ productId, buyerId: req.loggedInUserId });
+
+    // if not cart, throw error
+    if (!cart) {
+      return res.status(404).send({ message: "Product is not added to cart." });
+    }
+
+    // extract values from req.body
+    const actionData = req.body;
+
+    let newOrderedQuantity =
+      actionData.action === "inc"
+        ? cart.orderedQuantity + 1
+        : cart.orderedQuantity - 1;
+
+    const product = await Product.findOne({ _id: productId });
+    const availableQuantity = product.quantity;
+
+    if (newOrderedQuantity > availableQuantity) {
+      return res.status(403).send({ message: "Product is outnumbered." });
+    }
+
+    if (newOrderedQuantity < 1) {
+      return res.status(403).send({ message: "Please remove item from cart." });
+    }
+
+    await Cart.updateOne(
+      { productId: productId, buyerId: req.loggedInUserId },
+      {
+        $set: {
+          orderedQuantity: newOrderedQuantity,
+        },
+      }
+    );
+
+    return res
+      .status(200)
+      .send({ message: "Quantity is updated successfully." });
+  }
+);
 export default router;

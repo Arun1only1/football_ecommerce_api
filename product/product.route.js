@@ -8,6 +8,7 @@ import { checkMongoIdValidityFromParams } from "../middleware/mongo.id.validity.
 import Product from "./product.model.js";
 import { addProductValidationSchema } from "./product.validation.js";
 import { paginationValidationSchema } from "../utils/pagination.validation.js";
+import Cart from "../cart/cart.model.js";
 
 const router = express.Router();
 
@@ -101,6 +102,9 @@ router.delete(
 
     // delete product
     await Product.deleteOne({ _id: productId });
+
+    // delete cart
+    await Cart.deleteMany({ productId: productId });
 
     return res
       .status(200)
@@ -210,15 +214,18 @@ router.post(
           name: 1,
           brand: 1,
           price: 1,
-          description: { $substr: ["$description", 0, 200] },
+          description: { $substr: ["$description", 0, 150] },
           image: 1,
         },
       },
     ]);
 
+    const totalProducts = await Product.find().countDocuments();
+    const numberOfPages = Math.ceil(totalProducts / limit);
+
     return res
       .status(200)
-      .send({ message: "success", productList: productList });
+      .send({ message: "success", productList: productList, numberOfPages });
   }
 );
 
@@ -265,7 +272,7 @@ router.post(
         $project: {
           name: 1,
           brand: 1,
-          description: { $substr: ["$description", 0, 200] },
+          description: { $substr: ["$description", 0, 150] },
           image: 1,
           price: 1,
         },

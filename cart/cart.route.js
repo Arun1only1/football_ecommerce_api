@@ -130,7 +130,9 @@ router.get("/cart/item/list", isBuyer, async (req, res) => {
         brand: { $first: "$productDetails.brand" },
         price: { $first: "$productDetails.price" },
         image: { $first: "$productDetails.image" },
+        sellerId: { $first: "$productDetails.sellerId" },
         productId: 1,
+
         orderedQuantity: 1,
         subTotal: {
           $multiply: [{ $first: "$productDetails.price" }, "$orderedQuantity"],
@@ -157,6 +159,8 @@ router.get("/cart/item/list", isBuyer, async (req, res) => {
       { name: "discount", value: discount.toFixed(2) },
       { name: "grandTotal", value: grandTotal.toFixed(2) },
     ],
+
+    grandTotal,
   });
 });
 

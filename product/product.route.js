@@ -195,14 +195,21 @@ router.post(
   },
   async (req, res) => {
     // extract pagination data from req.body
-    const { page, limit } = req.body;
+    const { page, limit, searchText } = req.body;
+    console.log(req.body);
 
     // calculate skip
     const skip = (page - 1) * limit;
 
+    let match = {};
+
+    if (searchText) {
+      match = { name: { $regex: searchText, $options: "i" } };
+    }
+
     // run query
     const productList = await Product.aggregate([
-      { $match: {} },
+      { $match: match },
       {
         $skip: skip,
       },
@@ -216,11 +223,12 @@ router.post(
           price: 1,
           description: { $substr: ["$description", 0, 150] },
           image: 1,
+          sellerId: 1,
         },
       },
     ]);
 
-    const totalProducts = await Product.find().countDocuments();
+    const totalProducts = await Product.find(match).countDocuments();
     const numberOfPages = Math.ceil(totalProducts / limit);
 
     return res

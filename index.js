@@ -4,6 +4,8 @@ import userRoutes from "./user/user.route.js";
 import productRoutes from "./product/product.route.js";
 import cartRoutes from "./cart/cart.route.js";
 import cors from "cors";
+import paymentRoutes from "./payment/payment.route.js";
+import orderRoutes from "./order/order.route.js";
 
 const app = express();
 // to make app understand json
@@ -19,6 +21,8 @@ connectDB();
 app.use(userRoutes);
 app.use(productRoutes);
 app.use(cartRoutes);
+app.use(paymentRoutes);
+app.use(orderRoutes);
 
 // server and network port
 const PORT = process.env.API_PORT;

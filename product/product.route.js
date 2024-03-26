@@ -29,6 +29,7 @@ router.post(
       req.body = validatedData;
       next();
     } catch (error) {
+      console.log(error);
       return res.status(400).send({ message: error.message });
     }
   },
@@ -195,8 +196,7 @@ router.post(
   },
   async (req, res) => {
     // extract pagination data from req.body
-    const { page, limit, searchText } = req.body;
-    console.log(req.body);
+    const { page, limit, searchText, category, minPrice, maxPrice } = req.body;
 
     // calculate skip
     const skip = (page - 1) * limit;
@@ -204,12 +204,21 @@ router.post(
     let match = {};
 
     if (searchText) {
-      match = { name: { $regex: searchText, $options: "i" } };
+      match = { ...match, name: { $regex: searchText, $options: "i" } };
+    }
+
+    if (category) {
+      match = { ...match, category: category };
+    }
+
+    if (minPrice >= 0 && maxPrice) {
+      match = { ...match, price: { $gte: minPrice, $lte: maxPrice } };
     }
 
     // run query
     const productList = await Product.aggregate([
       { $match: match },
+
       {
         $skip: skip,
       },
@@ -258,23 +267,31 @@ router.post(
   },
   async (req, res) => {
     // extract pagination data from req.body
-    const paginationData = req.body;
+    const { page, limit, category, minPrice, maxPrice } = req.body;
 
     // calculate skip
-    const skip = (paginationData.page - 1) * paginationData.limit;
+    const skip = (page - 1) * limit;
+
+    let match = { sellerId: req.loggedInUserId };
+
+    if (category) {
+      match = { ...match, category };
+    }
+
+    if (minPrice > 0 && maxPrice) {
+      match = { ...match, price: { $gte: minPrice, $lte: maxPrice } };
+    }
 
     // run query
     const productList = await Product.aggregate([
       {
-        $match: {
-          sellerId: req.loggedInUserId,
-        },
+        $match: match,
       },
       {
         $skip: skip,
       },
       {
-        $limit: paginationData.limit,
+        $limit: limit,
       },
       {
         $project: {
@@ -292,5 +309,28 @@ router.post(
       .send({ message: "success", productList: productList });
   }
 );
+
+// get latest product
+router.get("/product/list/latest", isUser, async (req, res) => {
+  const products = await Product.aggregate([
+    {
+      $match: {},
+    },
+    {
+      $sort: { createdAt: -1 },
+    },
+    { $limit: 5 },
+    {
+      $project: {
+        image: 1,
+        name: 1,
+        price: 1,
+        brand: 1,
+      },
+    },
+  ]);
+
+  return res.status(200).send({ message: "success", latestProducts: products });
+});
 
 export default router;

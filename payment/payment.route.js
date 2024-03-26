@@ -72,7 +72,6 @@ router.post("/payment/khalti/verify", isBuyer, async (req, res) => {
     }
   );
 
-  console.log(khaltiResponse);
   await Order.updateMany(
     { pidx },
     {

@@ -153,7 +153,9 @@ router.put(
 
     // if otp code is not verified, throw error
     if (!otpDoc.isVerified) {
-      return res.status(404).send({ message: "Otp is not verified." });
+      return res
+        .status(404)
+        .send({ message: "Otp is not verified.Try again." });
     }
 
     // let user change password

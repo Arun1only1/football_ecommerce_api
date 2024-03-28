@@ -36,3 +36,34 @@ export let loginUserValidationSchema = Yup.object({
     .lowercase(),
   password: Yup.string().required("Password is required.").trim(),
 });
+
+export let userEmailValidationSchema = Yup.object({
+  email: Yup.string()
+    .email("Must be valid email.")
+    .required("Email is required.")
+    .trim()
+    .lowercase(),
+});
+
+export let verifyOtpValidationSchema = Yup.object({
+  email: Yup.string()
+    .email("Must be valid email.")
+    .required("Email is required.")
+    .trim()
+    .lowercase(),
+
+  otp: Yup.number().required(),
+});
+
+export let passwordValidationSchema = Yup.object({
+  email: Yup.string()
+    .email("Must be valid email.")
+    .required("Email is required.")
+    .trim()
+    .lowercase(),
+  newPassword: Yup.string()
+    .required("Password is required.")
+    .trim()
+    .min(4, "Password must be at least 4 characters.")
+    .max(20, "Password must be at max 20 characters."),
+});

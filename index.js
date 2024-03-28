@@ -6,6 +6,7 @@ import cartRoutes from "./cart/cart.route.js";
 import cors from "cors";
 import paymentRoutes from "./payment/payment.route.js";
 import orderRoutes from "./order/order.route.js";
+import resetPasswordRoutes from "./user/reset.password.route.js";
 
 const app = express();
 // to make app understand json
@@ -23,6 +24,7 @@ app.use(productRoutes);
 app.use(cartRoutes);
 app.use(paymentRoutes);
 app.use(orderRoutes);
+app.use(resetPasswordRoutes);
 
 // server and network port
 const PORT = process.env.API_PORT;

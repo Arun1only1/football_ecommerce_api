@@ -1,3 +1,3 @@
 export const generateOtp = () => {
-  return (Math.floor(Math.random() * 10000) + 1000).toString().substring(1);
+  return Math.floor(100000 + Math.random() * 900000)
 };

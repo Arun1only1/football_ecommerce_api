@@ -50,7 +50,7 @@ router.post(
     const otp = generateOtp();
 
     // send email
-    await sendEmailOTP(user.firstName, otp);
+    await sendEmailOTP(user.firstName, otp, email);
 
     await Otp.deleteMany({ email });
 

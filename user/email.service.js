@@ -1,23 +1,21 @@
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-  host: "sandbox.smtp.mailtrap.io",
+  host: "smtp.ethereal.email",
   port: 587,
-  secure: false, // Use `true` for port 465, `false` for all other ports
   auth: {
-    user: "f7b32c10a250c7",
-    pass: "f7f9e040104d0d",
+    user: "kade.senger33@ethereal.email",
+    pass: "2ZS4kMznRwgdbeCgwN",
   },
 });
 
 // async..await is not allowed in global scope, must use a wrapper
-export const sendEmailOTP = async (firstName, otp) => {
+export const sendEmailOTP = async (firstName, otp, email) => {
   // send mail with defined transport object
   const info = await transporter.sendMail({
-    from: "nepalmart@gmail.com", // sender address
-    to: "jotofob572@mnsaf.com", // list of receivers
+    from: '"Nepal Mart" <kade.senger33@ethereal.email>', // sender address
+    to: email, // list of receivers
     subject: "Reset password otp", // Subject line
-    // text: "Hello world?", // plain text body
     html: `<div style="box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;padding:1rem;">
     <h3>Reset password otp</h3>
    <br/> 
